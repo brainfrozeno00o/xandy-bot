@@ -3,18 +3,17 @@ from json import load
 from sys import path
 from logging import getLogger
 
-path.insert(0, "..")  # add parent package
+# add parent package
+path.insert(0, "..")
 
 logger = getLogger(__name__)
 
 
 def read_quotes():
-    with open_text("data", "sample-quotes.json") as file:
+    with open_text("data", "xander-quotes.json") as file:
         logger.info("Opening JSON file for reading...")
         data = load(file)
 
     logger.info("Done reading JSON file and returning read quotes...")
-    return data["xanderQuotes"]  # get the value xanderQuotes key
-
-
-# print(read_quotes())
+    # get the value xanderQuotes of key
+    return data["xanderQuotes"]
