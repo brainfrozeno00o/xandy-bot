@@ -50,3 +50,9 @@ class QuoteGetter:
 
         logger.info("Successfully got a random Xander quote...")
         return quote_released
+
+    def get_up_for_release_quotes_length(self):
+        return len(self.UP_FOR_RELEASE)
+
+    def get_released_quotes_length(self):
+        return len(self.RELEASED)
