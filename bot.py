@@ -80,17 +80,23 @@ async def send_logs():
     # initialize the message to None if message_id = 0 is not found in the .env
     message = None if message_id == 0 else await logs_channel.fetch_message(message_id)
 
-    while not bot.is_closed():
+    while True:
         period = datetime.now(pytz.utc)
 
-        # sending logs every five minutes
-        if period.minute % 5 == 0:
+        # sending logs every five minutes EXCEPT every hour
+        if period.minute % 5 == 0 and period.minute != 0:
 
             main_logger.info("Sending logs...")
 
+            current_list = (
+                XANDER_BOT_TEST_CHANNEL_LIST
+                if ENVIRONMENT == "development"
+                else GENERAL_CHANNEL_LIST
+            )
+
             guild_list = []
 
-            for channel in GENERAL_CHANNEL_LIST:
+            for channel in current_list:
                 guild_list.append(channel.guild.name)
 
             guild_string = "\n".join(guild_list)
@@ -110,8 +116,8 @@ Server List:
 ```
             """
 
-            # check if the message id is in its initial state
-            if message_id == 0:
+            # check instead if message = None
+            if message == None:
                 message = await logs_channel.send(
                     content=log_message
                 )  # set new message as long as the bot is active
@@ -120,9 +126,10 @@ Server List:
             else:
                 await message.edit(content=log_message)
 
-            time = 90
+            time = 270  # wait for four minutes and thirty seconds
         else:
             time = 1
+
         await sleep(time)
 
 
@@ -132,18 +139,18 @@ async def send_xander_quote():
     main_logger.info("Getting channels from all guilds...")
 
     for channel in bot.get_all_channels():
-        if channel.name == "general":
+        if channel.name == "general" and ENVIRONMENT != "development":
             main_logger.info(
                 f"Guild name: {channel.guild.name} that has a general channel..."
             )
             GENERAL_CHANNEL_LIST.append(channel)
-        elif channel.name == "xander-bot-test-channel":
+        elif channel.name == "xander-bot-test-channel" and ENVIRONMENT == "development":
             main_logger.info(
                 f"Guild name: {channel.guild.name} that has a xander-bot-test-channel..."
             )
             XANDER_BOT_TEST_CHANNEL_LIST.append(channel)
 
-    while not bot.is_closed():
+    while True:
         period = datetime.now(pytz.utc)
 
         timed_condition = (
@@ -194,6 +201,7 @@ async def send_xander_quote():
             time = 90
         else:
             time = 1
+
         await sleep(time)
 
 
