@@ -221,65 +221,60 @@ async def change_status():
     while True:
         period = datetime.now(pytz.utc)
 
-        # only set the statuses at the exact time
-        if period.second == 0:
-            # currently no switch case in Python... will go with the basic implementation first
-            # set once it is 8 am
-            if period.hour == 0 and period.minute == 0:
-                await bot.change_presence(
-                    activity=Game(name="Dota 2 forever"), status=Status.online
-                )
-                time = COMMON_SLEEP_TIME
-            # set once it is at 9 pm
-            elif period.hour == 13 and period.minute == 0:
-                await bot.change_presence(
-                    activity=Streaming(
-                        name="Sexercise", url="https://www.twitch.tv/kiaraakitty"
-                    ),
-                    status=Status.dnd,
-                )
-                time = COMMON_SLEEP_TIME
-            # set once it is at 10:45 pm
-            elif period.hour == 14 and period.minute == 45:
-                await bot.change_presence(
-                    activity=Game(name="with myself in the shower"), status=Status.dnd
-                )
-                time = COMMON_SLEEP_TIME
-            # set once it is at 10:55 pm
-            elif period.hour == 14 and period.minute == 55:
-                await bot.change_presence(
-                    activity=Game(name="with my milk and steamed bananas"),
-                    status=Status.dnd,
-                )
-                time = COMMON_SLEEP_TIME
-            # set once it is at 11 pm
-            elif period.hour == 15 and period.minute == 0:
-                await bot.change_presence(
-                    activity=Game(
-                        "with people that do not think that Yoimiya is the best"
-                    ),
-                    status=Status.online,
-                )
-                time = COMMON_SLEEP_TIME
-            # set once it is at 1 am
-            elif period.hour == 17 and period.minute == 0:
-                await bot.change_presence(
-                    activity=Activity(
-                        type=ActivityType.watching, name="K-pop idols/trainees cry"
-                    ),
-                    status=Status.dnd,
-                )
-                time = COMMON_SLEEP_TIME
-            # set once it is at 2 am
-            elif period.hour == 18 and period.minute == 0:
-                await bot.change_presence(
-                    activity=Game("with Albdog <3"), status=Status.dnd
-                )
-                time = COMMON_SLEEP_TIME
-            else:
-                time = 1
+        # currently no switch case in Python... will go with the basic implementation first
+        # set once it is 8 am
+        if period.hour == 0 and period.minute == 0:
+            await bot.change_presence(
+                activity=Game(name="Dota 2 forever"), status=Status.online
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 9 pm
+        elif period.hour == 13 and period.minute == 0:
+            await bot.change_presence(
+                activity=Streaming(
+                    name="Sexercise", url="https://www.twitch.tv/kiaraakitty"
+                ),
+                status=Status.dnd,
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 10:45 pm
+        elif period.hour == 14 and period.minute == 45:
+            await bot.change_presence(
+                activity=Game(name="with myself in the shower"), status=Status.dnd
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 10:55 pm
+        elif period.hour == 14 and period.minute == 55:
+            await bot.change_presence(
+                activity=Game(name="with my milk and steamed bananas"),
+                status=Status.dnd,
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 11 pm
+        elif period.hour == 15 and period.minute == 0:
+            await bot.change_presence(
+                activity=Game("with people that do not think that Yoimiya is the best"),
+                status=Status.online,
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 1 am
+        elif period.hour == 17 and period.minute == 0:
+            await bot.change_presence(
+                activity=Activity(
+                    type=ActivityType.watching, name="K-pop idols/trainees cry"
+                ),
+                status=Status.dnd,
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 2 am
+        elif period.hour == 18 and period.minute == 0:
+            await bot.change_presence(
+                activity=Game("with Albdog <3"), status=Status.dnd
+            )
+            time = COMMON_SLEEP_TIME
         else:
             time = 1
+
         await sleep(time)
 
 
