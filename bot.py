@@ -23,6 +23,8 @@ ENVIRONMENT = getenv("ENVIRONMENT")
 LOGS_CHANNEL_ID = getenv("XANDY_LOG_CHANNEL_ID")
 LOG_MESSAGE_ID = getenv("MESSAGE_ID")
 
+COMMON_SLEEP_TIME = 90  # may be an environment variable but not really
+
 xanderShit = QuoteGetter()  # initializing Quote Getter object
 
 fileConfig("logger.ini", disable_existing_loggers=False)
@@ -204,7 +206,7 @@ async def send_xander_quote():
             for channel in channel_list:
                 await channel.send(content=message, embed=xander_embed)
 
-            time = 90
+            time = COMMON_SLEEP_TIME
         else:
             time = 1
 
@@ -227,7 +229,7 @@ async def change_status():
                 await bot.change_presence(
                     activity=Game(name="Dota 2 forever"), status=Status.online
                 )
-                time = 46780  # sleep for 12 hours, 59 minutes and 40 seconds
+                time = COMMON_SLEEP_TIME
             # set once it is at 9 pm
             elif period.hour == 13 and period.minute == 0:
                 await bot.change_presence(
@@ -236,20 +238,20 @@ async def change_status():
                     ),
                     status=Status.dnd,
                 )
-                time = 5400  # sleep for 1 hour and 30 minutes
+                time = COMMON_SLEEP_TIME
             # set once it is at 10:45 pm
             elif period.hour == 14 and period.minute == 45:
                 await bot.change_presence(
                     activity=Game(name="with myself in the shower"), status=Status.dnd
                 )
-                time = 540  # sleep for 9 minutes
+                time = COMMON_SLEEP_TIME
             # set once it is at 10:55 pm
             elif period.hour == 14 and period.minute == 55:
                 await bot.change_presence(
                     activity=Game(name="with my milk and steamed bananas"),
                     status=Status.dnd,
                 )
-                time = 240  # sleep for 4 minutes
+                time = COMMON_SLEEP_TIME
             # set once it is at 11 pm
             elif period.hour == 15 and period.minute == 0:
                 await bot.change_presence(
@@ -258,7 +260,7 @@ async def change_status():
                     ),
                     status=Status.online,
                 )
-                time = 7140  # sleep for 1 hour and 59 minutes
+                time = COMMON_SLEEP_TIME
             # set once it is at 1 am
             elif period.hour == 17 and period.minute == 0:
                 await bot.change_presence(
@@ -267,13 +269,15 @@ async def change_status():
                     ),
                     status=Status.dnd,
                 )
-                time = 5400  # sleep for 1 hour and 30 minutes
+                time = COMMON_SLEEP_TIME
             # set once it is at 2 am
             elif period.hour == 18 and period.minute == 0:
                 await bot.change_presence(
                     activity=Game("with Albdog <3"), status=Status.dnd
                 )
-                time = 21540  # sleep for 5 hours and 59 minutes
+                time = COMMON_SLEEP_TIME
+            else:
+                time = 1
         else:
             time = 1
         await sleep(time)
