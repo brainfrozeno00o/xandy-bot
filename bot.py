@@ -111,18 +111,18 @@ async def send_logs():
                 guild_string = "\n".join(guild_list)
 
                 log_message = f"""
-    ```
-    Log at this time: {period.now(pytz.timezone("Asia/Singapore")).strftime("%d-%m-%Y %H:%M:%S %z")}
+```
+Log at this time: {period.now(pytz.timezone("Asia/Singapore")).strftime("%d-%m-%Y %H:%M:%S %z")}
 
-    Number of servers currently serving: {len(current_list)}
+Number of servers currently serving: {len(current_list)}
 
-    Number of quotes released: {xanderShit.get_released_quotes_length()}
+Number of quotes released: {xanderShit.get_released_quotes_length()}
 
-    Number of quotes up for release: {xanderShit.get_up_for_release_quotes_length()}
+Number of quotes up for release: {xanderShit.get_up_for_release_quotes_length()}
 
-    Server List:
-    {guild_string}
-    ```
+Server List:
+{guild_string}
+```
                 """
 
                 # check instead if message = None
