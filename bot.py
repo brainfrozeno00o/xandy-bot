@@ -1,4 +1,6 @@
-from discord import Embed
+from discord import Embed, Game
+from discord.activity import Activity, Streaming
+from discord.enums import ActivityType, Status
 from discord.ext import commands
 from discord.flags import Intents
 from reader.quotegetter import QuoteGetter
@@ -21,6 +23,8 @@ ENVIRONMENT = getenv("ENVIRONMENT")
 LOGS_CHANNEL_ID = getenv("XANDY_LOG_CHANNEL_ID")
 LOG_MESSAGE_ID = getenv("MESSAGE_ID")
 
+COMMON_SLEEP_TIME = 90  # may be an environment variable but not really
+
 xanderShit = QuoteGetter()  # initializing Quote Getter object
 
 fileConfig("logger.ini", disable_existing_loggers=False)
@@ -30,8 +34,12 @@ main_logger.debug(f"Running bot on version {__version__} on {ENVIRONMENT} enviro
 
 intents = Intents.all()
 
+# added initial status first here
 bot = commands.Bot(
-    command_prefix="xandy", intents=intents
+    command_prefix="xandy",
+    intents=intents,
+    activity=Game("Dota 2 forever"),
+    status=Status.online,
 )  # to be used soon when playing specific K-pop songs
 
 GENERAL_CHANNEL_LIST = []
@@ -105,7 +113,7 @@ async def send_logs():
 ```
 Log at this time: {period.now(pytz.timezone("Asia/Singapore")).strftime("%d-%m-%Y %H:%M:%S %z")}
 
-Number of servers currently serving: {len(GENERAL_CHANNEL_LIST)}
+Number of servers currently serving: {len(current_list)}
 
 Number of quotes released: {xanderShit.get_released_quotes_length()}
 
@@ -198,7 +206,72 @@ async def send_xander_quote():
             for channel in channel_list:
                 await channel.send(content=message, embed=xander_embed)
 
-            time = 90
+            time = COMMON_SLEEP_TIME
+        else:
+            time = 1
+
+        await sleep(time)
+
+
+async def change_status():
+    await bot.wait_until_ready()
+
+    main_logger.info("Task for determining status has now started...")
+
+    while True:
+        period = datetime.now(pytz.utc)
+
+        # currently no switch case in Python... will go with the basic implementation first
+        # set once it is 8 am
+        if period.hour == 0 and period.minute == 0:
+            await bot.change_presence(
+                activity=Game(name="Dota 2 forever"), status=Status.online
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 9 pm
+        elif period.hour == 13 and period.minute == 0:
+            await bot.change_presence(
+                activity=Streaming(
+                    name="Sexercise", url="https://www.twitch.tv/kiaraakitty"
+                ),
+                status=Status.dnd,
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 10:45 pm
+        elif period.hour == 14 and period.minute == 45:
+            await bot.change_presence(
+                activity=Game(name="with myself in the shower"), status=Status.dnd
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 10:55 pm
+        elif period.hour == 14 and period.minute == 55:
+            await bot.change_presence(
+                activity=Game(name="with my milk and steamed bananas"),
+                status=Status.dnd,
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 11 pm
+        elif period.hour == 15 and period.minute == 0:
+            await bot.change_presence(
+                activity=Game("with people that do not think that Yoimiya is the best"),
+                status=Status.online,
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 1 am
+        elif period.hour == 17 and period.minute == 0:
+            await bot.change_presence(
+                activity=Activity(
+                    type=ActivityType.watching, name="K-pop idols/trainees cry"
+                ),
+                status=Status.dnd,
+            )
+            time = COMMON_SLEEP_TIME
+        # set once it is at 2 am
+        elif period.hour == 18 and period.minute == 0:
+            await bot.change_presence(
+                activity=Game("with Albdog <3"), status=Status.dnd
+            )
+            time = COMMON_SLEEP_TIME
         else:
             time = 1
 
@@ -207,5 +280,6 @@ async def send_xander_quote():
 
 bot.loop.create_task(send_xander_quote())
 bot.loop.create_task(send_logs())
+bot.loop.create_task(change_status())
 
 bot.run(TOKEN)
