@@ -91,54 +91,59 @@ async def send_logs():
     while True:
         period = datetime.now(pytz.utc)
 
-        # sending logs every five minutes EXCEPT every hour
-        if period.minute % 5 == 0 and period.minute != 0:
+        try:
+            # sending logs every five minutes EXCEPT every hour
+            if period.minute % 5 == 0 and period.minute != 0:
 
-            main_logger.info("Sending logs...")
+                main_logger.info("Sending logs...")
 
-            current_list = (
-                XANDER_BOT_TEST_CHANNEL_LIST
-                if ENVIRONMENT == "development"
-                else GENERAL_CHANNEL_LIST
-            )
+                current_list = (
+                    XANDER_BOT_TEST_CHANNEL_LIST
+                    if ENVIRONMENT == "development"
+                    else GENERAL_CHANNEL_LIST
+                )
 
-            guild_list = []
+                guild_list = []
 
-            for channel in current_list:
-                guild_list.append(channel.guild.name)
+                for channel in current_list:
+                    guild_list.append(channel.guild.name)
 
-            guild_string = "\n".join(guild_list)
+                guild_string = "\n".join(guild_list)
 
-            log_message = f"""
-```
-Log at this time: {period.now(pytz.timezone("Asia/Singapore")).strftime("%d-%m-%Y %H:%M:%S %z")}
+                log_message = f"""
+    ```
+    Log at this time: {period.now(pytz.timezone("Asia/Singapore")).strftime("%d-%m-%Y %H:%M:%S %z")}
 
-Number of servers currently serving: {len(current_list)}
+    Number of servers currently serving: {len(current_list)}
 
-Number of quotes released: {xanderShit.get_released_quotes_length()}
+    Number of quotes released: {xanderShit.get_released_quotes_length()}
 
-Number of quotes up for release: {xanderShit.get_up_for_release_quotes_length()}
+    Number of quotes up for release: {xanderShit.get_up_for_release_quotes_length()}
 
-Server List:
-{guild_string}
-```
-            """
+    Server List:
+    {guild_string}
+    ```
+                """
 
-            # check instead if message = None
-            if message == None:
-                message = await logs_channel.send(
-                    content=log_message
-                )  # set new message as long as the bot is active
-                message_id = message.id
-                main_logger.info(f"Log Message ID: {message_id}")
+                # check instead if message = None
+                if message == None:
+                    message = await logs_channel.send(
+                        content=log_message
+                    )  # set new message as long as the bot is active
+                    message_id = message.id
+                    main_logger.info(f"Log Message ID: {message_id}")
+                else:
+                    await message.edit(content=log_message)
+
+                time = 270  # wait for four minutes and thirty seconds
             else:
-                await message.edit(content=log_message)
+                time = 1
 
-            time = 270  # wait for four minutes and thirty seconds
-        else:
-            time = 1
-
-        await sleep(time)
+            await sleep(time)
+        # catching any exception for now, and print error and then restart the task
+        except Exception as e:
+            main_logger.error(f"Error occurred at sending logs task: {e}")
+            pass
 
 
 async def send_xander_quote():
@@ -161,56 +166,62 @@ async def send_xander_quote():
     while True:
         period = datetime.now(pytz.utc)
 
-        timed_condition = (
-            period.minute % 2 == 0  # send at every 2nd minute
-            if ENVIRONMENT == "development"
-            else period.hour == 0 and period.minute == 0  # send at 8:00 AM UTC+8
-        )
+        try:
 
-        channel_list = (
-            XANDER_BOT_TEST_CHANNEL_LIST
-            if ENVIRONMENT == "development"
-            else GENERAL_CHANNEL_LIST
-        )
+            timed_condition = (
+                period.minute % 2 == 0  # send at every 2nd minute
+                if ENVIRONMENT == "development"
+                else period.hour == 0 and period.minute == 0  # send at 8:00 AM UTC+8
+            )
 
-        if timed_condition:
-            xander_quote = xanderShit.get_quote()
+            channel_list = (
+                XANDER_BOT_TEST_CHANNEL_LIST
+                if ENVIRONMENT == "development"
+                else GENERAL_CHANNEL_LIST
+            )
 
-            main_logger.info("Generating embed for sending...")
+            if timed_condition:
+                xander_quote = xanderShit.get_quote()
 
-            quote_taken = xander_quote["quote"]
-            context_taken = xander_quote["context"]
+                main_logger.info("Generating embed for sending...")
 
-            # quotes with the new line most likely have the quotation marks already within the quote
-            if "\n" in quote_taken:
-                embed_description = f"""
-                    {quote_taken}
-                    - {context_taken}
-                """
+                quote_taken = xander_quote["quote"]
+                context_taken = xander_quote["context"]
+
+                # quotes with the new line most likely have the quotation marks already within the quote
+                if "\n" in quote_taken:
+                    embed_description = f"""
+                        {quote_taken}
+                        - {context_taken}
+                    """
+                else:
+                    embed_description = f'"{quote_taken}" - {context_taken}'
+
+                xander_embed = Embed(
+                    title="Xander Quote of the Day",
+                    description=embed_description,
+                    color=0xCF37CA,
+                )
+                xander_embed.set_footer(text="This bot is powered by Xander's money")
+                xander_embed.set_image(url=IMAGE)
+                main_logger.info(
+                    "Bot now sending embed message with content in all general channels..."
+                )
+
+                message = "Hello @everyone!"
+
+                for channel in channel_list:
+                    await channel.send(content=message, embed=xander_embed)
+
+                time = COMMON_SLEEP_TIME
             else:
-                embed_description = f'"{quote_taken}" - {context_taken}'
+                time = 1
 
-            xander_embed = Embed(
-                title="Xander Quote of the Day",
-                description=embed_description,
-                color=0xCF37CA,
-            )
-            xander_embed.set_footer(text="This bot is powered by Xander's money")
-            xander_embed.set_image(url=IMAGE)
-            main_logger.info(
-                "Bot now sending embed message with content in all general channels..."
-            )
-
-            message = "Hello @everyone!"
-
-            for channel in channel_list:
-                await channel.send(content=message, embed=xander_embed)
-
-            time = COMMON_SLEEP_TIME
-        else:
-            time = 1
-
-        await sleep(time)
+            await sleep(time)
+        # catching any exception for now, and print error and then restart the task
+        except Exception as e:
+            main_logger.error(f"Error occurred at sending quotes task: {e}")
+            pass
 
 
 async def change_status():
@@ -221,61 +232,68 @@ async def change_status():
     while True:
         period = datetime.now(pytz.utc)
 
-        # currently no switch case in Python... will go with the basic implementation first
-        # set once it is 8 am
-        if period.hour == 0 and period.minute == 0:
-            await bot.change_presence(
-                activity=Game(name="Dota 2 forever"), status=Status.online
-            )
-            time = COMMON_SLEEP_TIME
-        # set once it is at 9 pm
-        elif period.hour == 13 and period.minute == 0:
-            await bot.change_presence(
-                activity=Streaming(
-                    name="Sexercise", url="https://www.twitch.tv/kiaraakitty"
-                ),
-                status=Status.dnd,
-            )
-            time = COMMON_SLEEP_TIME
-        # set once it is at 10:45 pm
-        elif period.hour == 14 and period.minute == 45:
-            await bot.change_presence(
-                activity=Game(name="with myself in the shower"), status=Status.dnd
-            )
-            time = COMMON_SLEEP_TIME
-        # set once it is at 10:55 pm
-        elif period.hour == 14 and period.minute == 55:
-            await bot.change_presence(
-                activity=Game(name="with my milk and steamed bananas"),
-                status=Status.dnd,
-            )
-            time = COMMON_SLEEP_TIME
-        # set once it is at 11 pm
-        elif period.hour == 15 and period.minute == 0:
-            await bot.change_presence(
-                activity=Game("with people that do not think that Yoimiya is the best"),
-                status=Status.online,
-            )
-            time = COMMON_SLEEP_TIME
-        # set once it is at 1 am
-        elif period.hour == 17 and period.minute == 0:
-            await bot.change_presence(
-                activity=Activity(
-                    type=ActivityType.watching, name="K-pop idols/trainees cry"
-                ),
-                status=Status.dnd,
-            )
-            time = COMMON_SLEEP_TIME
-        # set once it is at 2 am
-        elif period.hour == 18 and period.minute == 0:
-            await bot.change_presence(
-                activity=Game("with Albdog <3"), status=Status.dnd
-            )
-            time = COMMON_SLEEP_TIME
-        else:
-            time = 1
+        try:
+            # currently no switch case in Python... will go with the basic implementation first
+            # set once it is 8 am
+            if period.hour == 0 and period.minute == 0:
+                await bot.change_presence(
+                    activity=Game(name="Dota 2 forever"), status=Status.online
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 9 pm
+            elif period.hour == 13 and period.minute == 0:
+                await bot.change_presence(
+                    activity=Streaming(
+                        name="Sexercise", url="https://www.twitch.tv/kiaraakitty"
+                    ),
+                    status=Status.dnd,
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 10:45 pm
+            elif period.hour == 14 and period.minute == 45:
+                await bot.change_presence(
+                    activity=Game(name="with myself in the shower"), status=Status.dnd
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 10:55 pm
+            elif period.hour == 14 and period.minute == 55:
+                await bot.change_presence(
+                    activity=Game(name="with my milk and steamed bananas"),
+                    status=Status.dnd,
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 11 pm
+            elif period.hour == 15 and period.minute == 0:
+                await bot.change_presence(
+                    activity=Game(
+                        "with people that do not think that Yoimiya is the best"
+                    ),
+                    status=Status.online,
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 1 am
+            elif period.hour == 17 and period.minute == 0:
+                await bot.change_presence(
+                    activity=Activity(
+                        type=ActivityType.watching, name="K-pop idols/trainees cry"
+                    ),
+                    status=Status.dnd,
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 2 am
+            elif period.hour == 18 and period.minute == 0:
+                await bot.change_presence(
+                    activity=Game("with Albdog <3"), status=Status.dnd
+                )
+                time = COMMON_SLEEP_TIME
+            else:
+                time = 1
 
-        await sleep(time)
+            await sleep(time)
+        # catching any exception for now, and print error and then restart the task
+        except Exception as e:
+            main_logger.error(f"Error occurred at changing status task: {e}")
+            pass
 
 
 bot.loop.create_task(send_xander_quote())
