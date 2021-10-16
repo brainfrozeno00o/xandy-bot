@@ -34,13 +34,17 @@ main_logger.debug(f"Running bot on version {__version__} on {ENVIRONMENT} enviro
 
 intents = Intents.all()
 
+# get all the cogs
+extensions = ["cogs.helpx3"]
+
 # added initial status first here
 bot = commands.Bot(
-    command_prefix="xandy",
+    command_prefix="%",
     intents=intents,
-    activity=Game("Dota 2 forever"),
+    activity=Game("Dota 2 forever | %helphelphelp"),
+    help_command=None,  # disabling default help command due to custom help command
     status=Status.online,
-)  # to be used soon when playing specific K-pop songs
+)
 
 GENERAL_CHANNEL_LIST = []
 XANDER_BOT_TEST_CHANNEL_LIST = []
@@ -237,7 +241,8 @@ async def change_status():
             # set once it is 8 am
             if period.hour == 0 and period.minute == 0:
                 await bot.change_presence(
-                    activity=Game(name="Dota 2 forever"), status=Status.online
+                    activity=Game(name="Dota 2 forever | %helphelphelp"),
+                    status=Status.online,
                 )
                 time = COMMON_SLEEP_TIME
             # set once it is at 9 pm
@@ -252,13 +257,16 @@ async def change_status():
             # set once it is at 10:45 pm
             elif period.hour == 14 and period.minute == 45:
                 await bot.change_presence(
-                    activity=Game(name="with myself in the shower"), status=Status.dnd
+                    activity=Game(name="with myself in the shower | %helphelphelp"),
+                    status=Status.dnd,
                 )
                 time = COMMON_SLEEP_TIME
             # set once it is at 10:55 pm
             elif period.hour == 14 and period.minute == 55:
                 await bot.change_presence(
-                    activity=Game(name="with my milk and steamed bananas"),
+                    activity=Game(
+                        name="with my milk and steamed bananas | %helphelphelp"
+                    ),
                     status=Status.dnd,
                 )
                 time = COMMON_SLEEP_TIME
@@ -266,7 +274,7 @@ async def change_status():
             elif period.hour == 15 and period.minute == 0:
                 await bot.change_presence(
                     activity=Game(
-                        "with people that do not think that Yoimiya is the best"
+                        "with people that do not think that Yoimiya is the best | %helphelphelp"
                     ),
                     status=Status.online,
                 )
@@ -283,7 +291,7 @@ async def change_status():
             # set once it is at 2 am
             elif period.hour == 18 and period.minute == 0:
                 await bot.change_presence(
-                    activity=Game("with Albdog <3"), status=Status.dnd
+                    activity=Game("with Albdog <3 | %helphelphelp"), status=Status.dnd
                 )
                 time = COMMON_SLEEP_TIME
             else:
@@ -299,5 +307,10 @@ async def change_status():
 bot.loop.create_task(send_xander_quote())
 bot.loop.create_task(send_logs())
 bot.loop.create_task(change_status())
+
+# load the cogs here
+if __name__ == "__main__":
+    for extension in extensions:
+        bot.load_extension(extension)
 
 bot.run(TOKEN)
