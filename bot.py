@@ -172,6 +172,9 @@ async def send_xander_quote():
 
         try:
 
+            # only adding this option when in development
+            delete_after_seconds = 10 if ENVIRONMENT == "development" else 0
+
             timed_condition = (
                 period.minute % 2 == 0  # send at every 2nd minute
                 if ENVIRONMENT == "development"
@@ -215,7 +218,11 @@ async def send_xander_quote():
                 message = "Hello @everyone!"
 
                 for channel in channel_list:
-                    await channel.send(content=message, embed=xander_embed)
+                    await channel.send(
+                        content=message,
+                        embed=xander_embed,
+                        delete_after=delete_after_seconds,
+                    )
 
                 time = COMMON_SLEEP_TIME
             else:
