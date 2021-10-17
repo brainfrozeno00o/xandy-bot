@@ -18,7 +18,7 @@ import pytz
 
 load_dotenv()
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 # ALL STRINGS, CONVERT TO INT WHEN NEEDED
 TOKEN = getenv("DISCORD_TOKEN")
