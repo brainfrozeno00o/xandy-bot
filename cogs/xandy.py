@@ -1,12 +1,12 @@
 from random import randint
-from discord import Embed, Colour
+from discord import Embed
 from discord.ext import commands
 from discord.errors import Forbidden
 from logging import getLogger
 
 logger = getLogger(__name__)
 
-# helper method for sending the embed on the channel where the help commmand is called
+# helper method for sending the embed on the channel where the commmand is called
 async def send_embed(ctx, embed):
     """
     Basically this is the helper function that sends the embed that is only for this class/cog

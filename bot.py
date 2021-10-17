@@ -1,7 +1,10 @@
 from discord import Embed, Game
 from discord.activity import Activity, Streaming
+from discord.colour import Colour
 from discord.enums import ActivityType, Status
 from discord.ext import commands
+from discord.errors import Forbidden
+from discord.ext.commands.errors import CommandNotFound
 from discord.flags import Intents
 from reader.quotegetter import QuoteGetter
 from dotenv import load_dotenv
@@ -50,6 +53,31 @@ bot = commands.Bot(
 GENERAL_CHANNEL_LIST = []
 XANDER_BOT_TEST_CHANNEL_LIST = []
 
+# helper method for sending the embed on the channel where the invalid commmand is called
+async def send_embed(ctx, embed):
+    """
+    Basically this is the helper function that sends the embed that is only for this class/cog
+    Takes the context and embed to be sent to the channel in this following hierarchy
+    - tries to send the embed in the channel
+    - tries to send a normal message when it cannot send the embed
+    - tries to send embed privately with information about the missing permissions
+    """
+    main_logger.info("Sending embed...")
+
+    try:
+        await ctx.send(embed=embed)
+    except Forbidden:
+        try:
+            await ctx.send(
+                "Why can't I send embeds?!?!?!? Please check my permissions. PLEEEASEEEEE."
+            )
+        except:
+            await ctx.author.send(
+                f"I cannot send the embed in {ctx.channel.name} on {ctx.guild.name}\n"
+                f"Please inform Anjer Castillo on this. :slight_smile: ",
+                embed=embed,
+            )
+
 
 @bot.event
 async def on_ready():
@@ -78,6 +106,23 @@ async def on_guild_remove(guild):
             )
             GENERAL_CHANNEL_LIST.remove(channel)
             main_logger.info("Successfully removed channel...")
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, CommandNotFound):
+        main_logger.error(
+            f"Error occurred since no command was found. Called by {ctx.author}"
+        )
+        # generate embed for no error
+        no_command_emb = Embed(
+            title="Currently not a command :slight_frown:",
+            description="In case you want that to be a command, please talk to the REAL Xander Castillo. :smile:",
+            color=Colour.red(),
+        )
+        await send_embed(ctx, no_command_emb)
+        return
+    raise error
 
 
 async def send_logs():
