@@ -36,7 +36,7 @@ main_logger.debug(f"Running bot on version {__version__} on {ENVIRONMENT} enviro
 intents = Intents.all()
 
 # get all the cogs
-extensions = ["cogs.helpx3"]
+extensions = ["cogs.helpx3", "cogs.xandy"]
 
 # added initial status first here
 bot = commands.Bot(

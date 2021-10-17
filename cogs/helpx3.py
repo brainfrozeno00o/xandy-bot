@@ -49,7 +49,7 @@ class Help(commands.Cog):
     @commands.command(
         name="helphelphelp",
         aliases=["help", "helpx3"],
-        help="helphelphelp <command|alias>",
+        help="%helphelphelp <command|alias>",
         description="Showing help in a specific command/alias or all commands",
     )
     async def helphelphelp(self, ctx, *input):
@@ -98,7 +98,7 @@ class Help(commands.Cog):
                             inline=False,
                         )
                         help_emb.add_field(
-                            name="Help Text", value=f"{command.help}", inline=False
+                            name="Command Format", value=f"{command.help}", inline=False
                         )
                         help_emb.add_field(
                             name="Aliases",
