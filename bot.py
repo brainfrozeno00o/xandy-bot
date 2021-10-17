@@ -1,7 +1,10 @@
 from discord import Embed, Game
 from discord.activity import Activity, Streaming
+from discord.colour import Colour
 from discord.enums import ActivityType, Status
 from discord.ext import commands
+from discord.errors import Forbidden
+from discord.ext.commands.errors import CommandNotFound
 from discord.flags import Intents
 from reader.quotegetter import QuoteGetter
 from dotenv import load_dotenv
@@ -24,6 +27,7 @@ LOGS_CHANNEL_ID = getenv("XANDY_LOG_CHANNEL_ID")
 LOG_MESSAGE_ID = getenv("MESSAGE_ID")
 
 COMMON_SLEEP_TIME = 90  # may be an environment variable but not really
+DELETE_AFTER_SECONDS = 10  # only using this option when in development
 
 xanderShit = QuoteGetter()  # initializing Quote Getter object
 
@@ -34,16 +38,45 @@ main_logger.debug(f"Running bot on version {__version__} on {ENVIRONMENT} enviro
 
 intents = Intents.all()
 
+# get all the cogs
+extensions = ["cogs.helpx3", "cogs.xandy"]
+
 # added initial status first here
 bot = commands.Bot(
-    command_prefix="xandy",
+    command_prefix="%",
     intents=intents,
-    activity=Game("Dota 2 forever"),
+    activity=Game("Dota 2 forever | %helphelphelp"),
+    help_command=None,  # disabling default help command due to custom help command
     status=Status.online,
-)  # to be used soon when playing specific K-pop songs
+)
 
 GENERAL_CHANNEL_LIST = []
 XANDER_BOT_TEST_CHANNEL_LIST = []
+
+# helper method for sending the embed on the channel where the invalid commmand is called
+async def send_embed(ctx, embed):
+    """
+    Basically this is the helper function that sends the embed that is only for this class/cog
+    Takes the context and embed to be sent to the channel in this following hierarchy
+    - tries to send the embed in the channel
+    - tries to send a normal message when it cannot send the embed
+    - tries to send embed privately with information about the missing permissions
+    """
+    main_logger.info("Sending embed...")
+
+    try:
+        await ctx.send(embed=embed)
+    except Forbidden:
+        try:
+            await ctx.send(
+                "Why can't I send embeds?!?!?!? Please check my permissions. PLEEEASEEEEE."
+            )
+        except:
+            await ctx.author.send(
+                f"I cannot send the embed in {ctx.channel.name} on {ctx.guild.name}\n"
+                f"Please inform Anjer Castillo on this. :slight_smile: ",
+                embed=embed,
+            )
 
 
 @bot.event
@@ -73,6 +106,23 @@ async def on_guild_remove(guild):
             )
             GENERAL_CHANNEL_LIST.remove(channel)
             main_logger.info("Successfully removed channel...")
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, CommandNotFound):
+        main_logger.error(
+            f"Error occurred since no command was found. Called by {ctx.author}"
+        )
+        # generate embed for no error
+        no_command_emb = Embed(
+            title="Currently not a command :slight_frown:",
+            description="In case you want that to be a command, please talk to the REAL Xander Castillo. :smile:",
+            color=Colour.red(),
+        )
+        await send_embed(ctx, no_command_emb)
+        return
+    raise error
 
 
 async def send_logs():
@@ -211,7 +261,18 @@ async def send_xander_quote():
                 message = "Hello @everyone!"
 
                 for channel in channel_list:
-                    await channel.send(content=message, embed=xander_embed)
+                    # remove it to avoid clogging the test channels
+                    if ENVIRONMENT == "development":
+                        await channel.send(
+                            content=message,
+                            embed=xander_embed,
+                            delete_after=DELETE_AFTER_SECONDS,
+                        )
+                    else:
+                        await channel.send(
+                            content=message,
+                            embed=xander_embed,
+                        )
 
                 time = COMMON_SLEEP_TIME
             else:
@@ -237,7 +298,8 @@ async def change_status():
             # set once it is 8 am
             if period.hour == 0 and period.minute == 0:
                 await bot.change_presence(
-                    activity=Game(name="Dota 2 forever"), status=Status.online
+                    activity=Game(name="Dota 2 forever | %helphelphelp"),
+                    status=Status.online,
                 )
                 time = COMMON_SLEEP_TIME
             # set once it is at 9 pm
@@ -252,13 +314,16 @@ async def change_status():
             # set once it is at 10:45 pm
             elif period.hour == 14 and period.minute == 45:
                 await bot.change_presence(
-                    activity=Game(name="with myself in the shower"), status=Status.dnd
+                    activity=Game(name="with myself in the shower | %helphelphelp"),
+                    status=Status.dnd,
                 )
                 time = COMMON_SLEEP_TIME
             # set once it is at 10:55 pm
             elif period.hour == 14 and period.minute == 55:
                 await bot.change_presence(
-                    activity=Game(name="with my milk and steamed bananas"),
+                    activity=Game(
+                        name="with my milk and steamed bananas | %helphelphelp"
+                    ),
                     status=Status.dnd,
                 )
                 time = COMMON_SLEEP_TIME
@@ -266,7 +331,7 @@ async def change_status():
             elif period.hour == 15 and period.minute == 0:
                 await bot.change_presence(
                     activity=Game(
-                        "with people that do not think that Yoimiya is the best"
+                        "with people that do not think that Yoimiya is the best | %helphelphelp"
                     ),
                     status=Status.online,
                 )
@@ -283,7 +348,7 @@ async def change_status():
             # set once it is at 2 am
             elif period.hour == 18 and period.minute == 0:
                 await bot.change_presence(
-                    activity=Game("with Albdog <3"), status=Status.dnd
+                    activity=Game("with Albdog <3 | %helphelphelp"), status=Status.dnd
                 )
                 time = COMMON_SLEEP_TIME
             else:
@@ -299,5 +364,10 @@ async def change_status():
 bot.loop.create_task(send_xander_quote())
 bot.loop.create_task(send_logs())
 bot.loop.create_task(change_status())
+
+# load the cogs here
+if __name__ == "__main__":
+    for extension in extensions:
+        bot.load_extension(extension)
 
 bot.run(TOKEN)
