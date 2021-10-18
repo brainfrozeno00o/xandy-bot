@@ -18,16 +18,23 @@ import pytz
 
 load_dotenv()
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
+# ALL STRINGS, CONVERT TO INT WHEN NEEDED
 TOKEN = getenv("DISCORD_TOKEN")
 IMAGE = getenv("XANDER_IMAGE")
 ENVIRONMENT = getenv("ENVIRONMENT")
 LOGS_CHANNEL_ID = getenv("XANDY_LOG_CHANNEL_ID")
 LOG_MESSAGE_ID = getenv("MESSAGE_ID")
+BLITZ_ID = getenv("KRAZY_ID")  # id of the user bot has to listen to
+BLITZ_TIMEOUT = getenv(
+    "KRAZY_TIMEOUT"
+)  # number of seconds to wait after bot sends the mention
 
+# potential environment variables
 COMMON_SLEEP_TIME = 90  # may be an environment variable but not really
 DELETE_AFTER_SECONDS = 10  # only using this option when in development
+TIMER_ON = False  # initially default to false when booting the bot
 
 xanderShit = QuoteGetter()  # initializing Quote Getter object
 
@@ -123,6 +130,36 @@ async def on_command_error(ctx, error):
         await send_embed(ctx, no_command_emb)
         return
     raise error
+
+
+@bot.event
+async def on_message(message):
+    # important to put when processing commands first
+    await bot.process_commands(message)
+
+    global TIMER_ON  # had to force this
+    if message.author.id == int(BLITZ_ID):  # need to cast to int
+        if TIMER_ON == True:
+            main_logger.info("Currently waiting for timer to end...")
+            return
+        else:
+            TIMER_ON = True
+            try:
+                await message.channel.send(f"HOY {message.author.mention}")
+                main_logger.info("Successfully sent the callout...")
+                t = int(BLITZ_TIMEOUT)  # number of seconds
+                while t > 0:
+                    await sleep(1)
+                    t -= 1
+                TIMER_ON = False
+            except Exception as e:
+                main_logger.error(
+                    f"Error when trying to send the callout to {message.author.name} in {message.channel}: {e}"
+                )
+                TIMER_ON = False
+                pass
+    else:
+        return
 
 
 async def send_logs():
