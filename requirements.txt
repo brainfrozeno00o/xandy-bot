@@ -3,6 +3,7 @@ alembic==1.7.4
 async-timeout==3.0.1
 attrs==21.2.0
 black==21.9b0
+cffi==1.14.6
 chardet==4.0.0
 click==8.0.3
 colorama==0.4.4
