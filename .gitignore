@@ -8,4 +8,4 @@ __pycache__
 .env
 
 # ignore the virtual environment
-xdybot
+.venv

@@ -13,6 +13,8 @@ from logging.config import fileConfig
 from os import getenv
 from datetime import datetime
 from asyncio import sleep
+from alembic.config import Config
+from alembic import command
 
 import pytz
 
@@ -42,6 +44,11 @@ fileConfig("logger.ini", disable_existing_loggers=False)
 
 main_logger = getLogger("__main__")
 main_logger.debug(f"Running bot on version {__version__} on {ENVIRONMENT} environment")
+
+# for running the migration scripts
+main_logger.info("Running migration scripts...")
+alembic_config = Config("./alembic.ini")
+command.upgrade(alembic_config, "head")
 
 intents = Intents.all()
 
