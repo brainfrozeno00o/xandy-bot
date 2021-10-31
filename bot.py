@@ -1,5 +1,10 @@
-from discord import Embed
+from discord import Embed, Game
+from discord.activity import Activity, Streaming
+from discord.colour import Colour
+from discord.enums import ActivityType, Status
 from discord.ext import commands
+from discord.errors import Forbidden
+from discord.ext.commands.errors import CommandNotFound
 from discord.flags import Intents
 from reader.quotegetter import QuoteGetter
 from dotenv import load_dotenv
@@ -13,13 +18,23 @@ import pytz
 
 load_dotenv()
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
+# ALL STRINGS, CONVERT TO INT WHEN NEEDED
 TOKEN = getenv("DISCORD_TOKEN")
 IMAGE = getenv("XANDER_IMAGE")
 ENVIRONMENT = getenv("ENVIRONMENT")
 LOGS_CHANNEL_ID = getenv("XANDY_LOG_CHANNEL_ID")
 LOG_MESSAGE_ID = getenv("MESSAGE_ID")
+BLITZ_ID = getenv("KRAZY_ID")  # id of the user bot has to listen to
+BLITZ_TIMEOUT = getenv(
+    "KRAZY_TIMEOUT"
+)  # number of seconds to wait after bot sends the mention
+
+# potential environment variables
+COMMON_SLEEP_TIME = 90  # may be an environment variable but not really
+DELETE_AFTER_SECONDS = 10  # only using this option when in development
+TIMER_ON = False  # initially default to false when booting the bot
 
 xanderShit = QuoteGetter()  # initializing Quote Getter object
 
@@ -30,12 +45,45 @@ main_logger.debug(f"Running bot on version {__version__} on {ENVIRONMENT} enviro
 
 intents = Intents.all()
 
+# get all the cogs
+extensions = ["cogs.helpx3", "cogs.xandy"]
+
+# added initial status first here
 bot = commands.Bot(
-    command_prefix="xandy", intents=intents
-)  # to be used soon when playing specific K-pop songs
+    command_prefix="%",
+    intents=intents,
+    activity=Game("Dota 2 forever | %helphelphelp"),
+    help_command=None,  # disabling default help command due to custom help command
+    status=Status.online,
+)
 
 GENERAL_CHANNEL_LIST = []
 XANDER_BOT_TEST_CHANNEL_LIST = []
+
+# helper method for sending the embed on the channel where the invalid commmand is called
+async def send_embed(ctx, embed):
+    """
+    Basically this is the helper function that sends the embed that is only for this class/cog
+    Takes the context and embed to be sent to the channel in this following hierarchy
+    - tries to send the embed in the channel
+    - tries to send a normal message when it cannot send the embed
+    - tries to send embed privately with information about the missing permissions
+    """
+    main_logger.info("Sending embed...")
+
+    try:
+        await ctx.send(embed=embed)
+    except Forbidden:
+        try:
+            await ctx.send(
+                "Why can't I send embeds?!?!?!? Please check my permissions. PLEEEASEEEEE."
+            )
+        except:
+            await ctx.author.send(
+                f"I cannot send the embed in {ctx.channel.name} on {ctx.guild.name}\n"
+                f"Please inform Anjer Castillo on this. :slight_smile: ",
+                embed=embed,
+            )
 
 
 @bot.event
@@ -67,6 +115,53 @@ async def on_guild_remove(guild):
             main_logger.info("Successfully removed channel...")
 
 
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, CommandNotFound):
+        main_logger.error(
+            f"Error occurred since no command was found. Called by {ctx.author}"
+        )
+        # generate embed for no error
+        no_command_emb = Embed(
+            title="Currently not a command :slight_frown:",
+            description="In case you want that to be a command, please talk to the REAL Xander Castillo. :smile:",
+            color=Colour.red(),
+        )
+        await send_embed(ctx, no_command_emb)
+        return
+    raise error
+
+
+@bot.event
+async def on_message(message):
+    # important to put when processing commands first
+    await bot.process_commands(message)
+
+    global TIMER_ON  # had to force this
+    if message.author.id == int(BLITZ_ID):  # need to cast to int
+        if TIMER_ON == True:
+            main_logger.info("Currently waiting for timer to end...")
+            return
+        else:
+            TIMER_ON = True
+            try:
+                await message.channel.send(f"HOY {message.author.mention}")
+                main_logger.info("Successfully sent the callout...")
+                t = int(BLITZ_TIMEOUT)  # number of seconds
+                while t > 0:
+                    await sleep(1)
+                    t -= 1
+                TIMER_ON = False
+            except Exception as e:
+                main_logger.error(
+                    f"Error when trying to send the callout to {message.author.name} in {message.channel}: {e}"
+                )
+                TIMER_ON = False
+                pass
+    else:
+        return
+
+
 async def send_logs():
     await bot.wait_until_ready()
 
@@ -83,29 +178,30 @@ async def send_logs():
     while True:
         period = datetime.now(pytz.utc)
 
-        # sending logs every five minutes EXCEPT every hour
-        if period.minute % 5 == 0 and period.minute != 0:
+        try:
+            # sending logs every five minutes EXCEPT every hour
+            if period.minute % 5 == 0 and period.minute != 0:
 
-            main_logger.info("Sending logs...")
+                main_logger.info("Sending logs...")
 
-            current_list = (
-                XANDER_BOT_TEST_CHANNEL_LIST
-                if ENVIRONMENT == "development"
-                else GENERAL_CHANNEL_LIST
-            )
+                current_list = (
+                    XANDER_BOT_TEST_CHANNEL_LIST
+                    if ENVIRONMENT == "development"
+                    else GENERAL_CHANNEL_LIST
+                )
 
-            guild_list = []
+                guild_list = []
 
-            for channel in current_list:
-                guild_list.append(channel.guild.name)
+                for channel in current_list:
+                    guild_list.append(channel.guild.name)
 
-            guild_string = "\n".join(guild_list)
+                guild_string = "\n".join(guild_list)
 
-            log_message = f"""
+                log_message = f"""
 ```
 Log at this time: {period.now(pytz.timezone("Asia/Singapore")).strftime("%d-%m-%Y %H:%M:%S %z")}
 
-Number of servers currently serving: {len(GENERAL_CHANNEL_LIST)}
+Number of servers currently serving: {len(current_list)}
 
 Number of quotes released: {xanderShit.get_released_quotes_length()}
 
@@ -114,23 +210,27 @@ Number of quotes up for release: {xanderShit.get_up_for_release_quotes_length()}
 Server List:
 {guild_string}
 ```
-            """
+                """
 
-            # check instead if message = None
-            if message == None:
-                message = await logs_channel.send(
-                    content=log_message
-                )  # set new message as long as the bot is active
-                message_id = message.id
-                main_logger.info(f"Log Message ID: {message_id}")
+                # check instead if message = None
+                if message == None:
+                    message = await logs_channel.send(
+                        content=log_message
+                    )  # set new message as long as the bot is active
+                    message_id = message.id
+                    main_logger.info(f"Log Message ID: {message_id}")
+                else:
+                    await message.edit(content=log_message)
+
+                time = 270  # wait for four minutes and thirty seconds
             else:
-                await message.edit(content=log_message)
+                time = 1
 
-            time = 270  # wait for four minutes and thirty seconds
-        else:
-            time = 1
-
-        await sleep(time)
+            await sleep(time)
+        # catching any exception for now, and print error and then restart the task
+        except Exception as e:
+            main_logger.error(f"Error occurred at sending logs task: {e}")
+            pass
 
 
 async def send_xander_quote():
@@ -153,59 +253,158 @@ async def send_xander_quote():
     while True:
         period = datetime.now(pytz.utc)
 
-        timed_condition = (
-            period.minute % 2 == 0  # send at every 2nd minute
-            if ENVIRONMENT == "development"
-            else period.hour == 0 and period.minute == 0  # send at 8:00 AM UTC+8
-        )
+        try:
 
-        channel_list = (
-            XANDER_BOT_TEST_CHANNEL_LIST
-            if ENVIRONMENT == "development"
-            else GENERAL_CHANNEL_LIST
-        )
+            timed_condition = (
+                period.minute % 2 == 0  # send at every 2nd minute
+                if ENVIRONMENT == "development"
+                else period.hour == 0 and period.minute == 0  # send at 8:00 AM UTC+8
+            )
 
-        if timed_condition:
-            xander_quote = xanderShit.get_quote()
+            channel_list = (
+                XANDER_BOT_TEST_CHANNEL_LIST
+                if ENVIRONMENT == "development"
+                else GENERAL_CHANNEL_LIST
+            )
 
-            main_logger.info("Generating embed for sending...")
+            if timed_condition:
+                xander_quote = xanderShit.get_quote()
 
-            quote_taken = xander_quote["quote"]
-            context_taken = xander_quote["context"]
+                main_logger.info("Generating embed for sending...")
 
-            # quotes with the new line most likely have the quotation marks already within the quote
-            if "\n" in quote_taken:
-                embed_description = f"""
-                    {quote_taken}
-                    - {context_taken}
-                """
+                quote_taken = xander_quote["quote"]
+                context_taken = xander_quote["context"]
+
+                # quotes with the new line most likely have the quotation marks already within the quote
+                if "\n" in quote_taken:
+                    embed_description = f"""
+                        {quote_taken}
+                        - {context_taken}
+                    """
+                else:
+                    embed_description = f'"{quote_taken}" - {context_taken}'
+
+                xander_embed = Embed(
+                    title="Xander Quote of the Day",
+                    description=embed_description,
+                    color=0xCF37CA,
+                )
+                xander_embed.set_footer(text="This bot is powered by Xander's money")
+                xander_embed.set_image(url=IMAGE)
+                main_logger.info(
+                    "Bot now sending embed message with content in all general channels..."
+                )
+
+                message = "Hello @everyone!"
+
+                for channel in channel_list:
+                    # remove it to avoid clogging the test channels
+                    if ENVIRONMENT == "development":
+                        await channel.send(
+                            content=message,
+                            embed=xander_embed,
+                            delete_after=DELETE_AFTER_SECONDS,
+                        )
+                    else:
+                        await channel.send(
+                            content=message,
+                            embed=xander_embed,
+                        )
+
+                time = COMMON_SLEEP_TIME
             else:
-                embed_description = f'"{quote_taken}" - {context_taken}'
+                time = 1
 
-            xander_embed = Embed(
-                title="Xander Quote of the Day",
-                description=embed_description,
-                color=0xCF37CA,
-            )
-            xander_embed.set_footer(text="This bot is powered by Xander's money")
-            xander_embed.set_image(url=IMAGE)
-            main_logger.info(
-                "Bot now sending embed message with content in all general channels..."
-            )
+            await sleep(time)
+        # catching any exception for now, and print error and then restart the task
+        except Exception as e:
+            main_logger.error(f"Error occurred at sending quotes task: {e}")
+            pass
 
-            message = "Hello @everyone!"
 
-            for channel in channel_list:
-                await channel.send(content=message, embed=xander_embed)
+async def change_status():
+    await bot.wait_until_ready()
 
-            time = 90
-        else:
-            time = 1
+    main_logger.info("Task for determining status has now started...")
 
-        await sleep(time)
+    while True:
+        period = datetime.now(pytz.utc)
+
+        try:
+            # currently no switch case in Python... will go with the basic implementation first
+            # set once it is 8 am
+            if period.hour == 0 and period.minute == 0:
+                await bot.change_presence(
+                    activity=Game(name="Dota 2 forever | %helphelphelp"),
+                    status=Status.online,
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 9 pm
+            elif period.hour == 13 and period.minute == 0:
+                await bot.change_presence(
+                    activity=Streaming(
+                        name="Sexercise", url="https://www.twitch.tv/kiaraakitty"
+                    ),
+                    status=Status.dnd,
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 10:45 pm
+            elif period.hour == 14 and period.minute == 45:
+                await bot.change_presence(
+                    activity=Game(name="with myself in the shower | %helphelphelp"),
+                    status=Status.dnd,
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 10:55 pm
+            elif period.hour == 14 and period.minute == 55:
+                await bot.change_presence(
+                    activity=Game(
+                        name="with my milk and steamed bananas | %helphelphelp"
+                    ),
+                    status=Status.dnd,
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 11 pm
+            elif period.hour == 15 and period.minute == 0:
+                await bot.change_presence(
+                    activity=Game(
+                        "with people that do not think that Yoimiya is the best | %helphelphelp"
+                    ),
+                    status=Status.online,
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 1 am
+            elif period.hour == 17 and period.minute == 0:
+                await bot.change_presence(
+                    activity=Activity(
+                        type=ActivityType.watching, name="K-pop idols/trainees cry"
+                    ),
+                    status=Status.dnd,
+                )
+                time = COMMON_SLEEP_TIME
+            # set once it is at 2 am
+            elif period.hour == 18 and period.minute == 0:
+                await bot.change_presence(
+                    activity=Game("with Albdog <3 | %helphelphelp"), status=Status.dnd
+                )
+                time = COMMON_SLEEP_TIME
+            else:
+                time = 1
+
+            await sleep(time)
+        # catching any exception for now, and print error and then restart the task
+        except Exception as e:
+            main_logger.error(f"Error occurred at changing status task: {e}")
+            pass
 
 
 bot.loop.create_task(send_xander_quote())
 bot.loop.create_task(send_logs())
+bot.loop.create_task(change_status())
+
+# load the cogs here
+if __name__ == "__main__":
+    for extension in extensions:
+        bot.load_extension(extension)
 
 bot.run(TOKEN)
