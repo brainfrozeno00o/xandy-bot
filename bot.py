@@ -34,9 +34,11 @@ BLITZ_ID = getenv("KRAZY_ID")  # id of the user bot has to listen to
 BLITZ_TIMEOUT = getenv(
     "KRAZY_TIMEOUT"
 )  # number of seconds to wait after bot sends the mention
+COMMON_SLEEP_TIME = int(
+    getenv("COMMON_SLEEP_TIME")
+)  # now has become an environment variable due to development changes
 
-# potential environment variables
-COMMON_SLEEP_TIME = 90  # may be an environment variable but not really
+# set up variables
 DELETE_AFTER_SECONDS = 10  # only using this option when in development
 TIMER_ON = False  # initially default to false when booting the bot
 
