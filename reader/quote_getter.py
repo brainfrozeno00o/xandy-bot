@@ -45,7 +45,7 @@ class QuoteGetter:
                 password=self.DB_PASS,
                 host=self.DB_SERVER,
                 port="5432",
-                database="xdy_bot",
+                database=self.DB,
             )
             # disabling auto-commit so that in case of a transaction failure, we can roll back
             self.connection.autocommit = False
