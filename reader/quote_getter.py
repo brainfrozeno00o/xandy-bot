@@ -84,6 +84,26 @@ class QuoteGetter:
         finally:
             self.logger.debug("Done processing quotes up for release...")
 
+    def store_inserted_quote(self, quote):
+        # database-related code
+        try:
+            self.logger.info("Inserting released quote to database...")
+            # creating this to handle apostrophes when inserting in PostgreSQL
+            inserted_quote = quote["quote"].replace("'", "''")
+            inserted_context = quote["context"].replace("'", "''")
+            # inserting quote and committing the changes
+            self.cursor.execute(
+                f"INSERT INTO used_quotes (used_quote, used_context) VALUES ('{inserted_quote}', '{inserted_context}')"
+            )
+            self.connection.commit()
+        except (Exception, DatabaseError) as error:
+            self.logger.error(
+                f"Error in transaction when inserting used quote to database: {error}"
+            )
+            self.connection.rollback()
+        finally:
+            self.logger.debug("Done processing released quote to database...")
+
     def close_connection(self):
         if self.connection:
             self.cursor.close()
@@ -117,25 +137,6 @@ class QuoteGetter:
 
         # adding to the released counter the random quote that was popped
         self.released = self.released + 1
-        # database-related code
-        try:
-            self.logger.info("Inserting released quote to database...")
-            # creating this to handle apostrophes when inserting in PostgreSQL
-            inserted_quote = quote["quote"].replace("'", "''")
-            inserted_context = quote["context"].replace("'", "''")
-            # inserting quote and committing the changes
-            self.cursor.execute(
-                f"INSERT INTO used_quotes (used_quote, used_context) VALUES ('{inserted_quote}', '{inserted_context}')"
-            )
-            self.connection.commit()
-        except (Exception, DatabaseError) as error:
-            self.logger.error(
-                f"Error in transaction when inserting used quote to database: {error}"
-            )
-            self.connection.rollback()
-        finally:
-            self.logger.debug("Done processing released quote to database...")
-
         up_for_release_remaining = len(self.UP_FOR_RELEASE)
 
         # Logging how many quotes are left per pool

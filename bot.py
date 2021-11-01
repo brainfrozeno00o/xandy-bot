@@ -327,6 +327,8 @@ async def send_xander_quote():
             else:
                 time = 1
 
+            # store the quote after sending the embed
+            xanderShit.store_inserted_quote(xander_quote)
             await sleep(time)
         # catching any exception for now, and print error and then restart the task
         except Exception as e:
