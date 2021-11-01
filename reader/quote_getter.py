@@ -14,6 +14,7 @@ class QuoteGetter:
     DB_USER = ""
     DB_PASS = ""
     DB_SERVER = ""
+    DB = ""
     cursor = None
     connection = None
 
@@ -32,7 +33,7 @@ class QuoteGetter:
         self.DB_USER = getenv("DB_USER")
         self.DB_PASS = getenv("DB_PASS")
         self.DB_SERVER = getenv("DB_SERVER")
-
+        self.DB = getenv("DB")
         self.connect_db()
         self.setup_data()
 

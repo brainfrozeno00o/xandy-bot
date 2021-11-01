@@ -18,6 +18,7 @@ section = config.config_ini_section
 config.set_section_option(section, "DB_USER", getenv("DB_USER"))
 config.set_section_option(section, "DB_PASS", getenv("DB_PASS"))
 config.set_section_option(section, "DB_SERVER", getenv("DB_SERVER"))
+config.set_section_option(section, "DB", getenv("DB"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
