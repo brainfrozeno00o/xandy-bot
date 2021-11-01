@@ -1,7 +1,6 @@
 from copy import deepcopy
 from os import getenv
 from random import randint
-from .quotereader import read_quotes
 from logging import getLogger
 from dotenv import load_dotenv
 from psycopg2 import connect, Error, DatabaseError

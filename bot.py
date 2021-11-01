@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord.errors import Forbidden
 from discord.ext.commands.errors import CommandNotFound
 from discord.flags import Intents
-from reader.quotegetter import QuoteGetter
+from reader.quote_getter import QuoteGetter
 from dotenv import load_dotenv
 from logging import getLogger
 from logging.config import fileConfig
