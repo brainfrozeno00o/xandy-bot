@@ -6,17 +6,19 @@ from discord.ext import commands
 from discord.errors import Forbidden
 from discord.ext.commands.errors import CommandNotFound
 from discord.flags import Intents
-from reader.quotegetter import QuoteGetter
+from reader.quote_getter import QuoteGetter
 from dotenv import load_dotenv
 from logging import getLogger
 from logging.config import fileConfig
 from os import getenv
+from sys import exit
 from datetime import datetime
 from asyncio import sleep
 from alembic.config import Config
 from alembic import command
 
 import pytz
+import signal
 
 load_dotenv()
 
@@ -32,13 +34,15 @@ BLITZ_ID = getenv("KRAZY_ID")  # id of the user bot has to listen to
 BLITZ_TIMEOUT = getenv(
     "KRAZY_TIMEOUT"
 )  # number of seconds to wait after bot sends the mention
+COMMON_SLEEP_TIME = int(
+    getenv("COMMON_SLEEP_TIME")
+)  # now has become an environment variable due to development changes
 
-# potential environment variables
-COMMON_SLEEP_TIME = 90  # may be an environment variable but not really
+# set up variables
 DELETE_AFTER_SECONDS = 10  # only using this option when in development
 TIMER_ON = False  # initially default to false when booting the bot
 
-xanderShit = QuoteGetter()  # initializing Quote Getter object
+xanderShit = None
 
 fileConfig("logger.ini", disable_existing_loggers=False)
 
@@ -210,9 +214,9 @@ Log at this time: {period.now(pytz.timezone("Asia/Singapore")).strftime("%d-%m-%
 
 Number of servers currently serving: {len(current_list)}
 
-Number of quotes released: {xanderShit.get_released_quotes_length()}
+Number of quotes released in current runtime: {xanderShit.get_released_quotes_length()}
 
-Number of quotes up for release: {xanderShit.get_up_for_release_quotes_length()}
+Number of quotes up for release in current runtime: {xanderShit.get_up_for_release_quotes_length()}
 
 Server List:
 {guild_string}
@@ -263,7 +267,8 @@ async def send_xander_quote():
         try:
 
             timed_condition = (
-                period.minute % 2 == 0  # send at every 2nd minute
+                period.minute % 10
+                != 0  # send at every minute except at every 10th minute
                 if ENVIRONMENT == "development"
                 else period.hour == 0 and period.minute == 0  # send at 8:00 AM UTC+8
             )
@@ -318,6 +323,8 @@ async def send_xander_quote():
                             embed=xander_embed,
                         )
 
+                # store the quote after sending the embed
+                xanderShit.store_inserted_quote(xander_quote)
                 time = COMMON_SLEEP_TIME
             else:
                 time = 1
@@ -409,9 +416,30 @@ bot.loop.create_task(send_xander_quote())
 bot.loop.create_task(send_logs())
 bot.loop.create_task(change_status())
 
-# load the cogs here
+
+def terminateProcess(signalNumber, frame):
+    try:
+        xanderShit.store_quotes_up_for_release()
+    except (Exception) as error:
+        main_logger.error(
+            f"Tried storing quotes up for release but an error occurred: {error}"
+        )
+    finally:
+        xanderShit.close_connection()
+        exit()
+
+
+# load the cogs here, initialize the Quote Getter object and handling the terminate signals as well
 if __name__ == "__main__":
     for extension in extensions:
         bot.load_extension(extension)
 
+    xanderShit = QuoteGetter()
+
+    # handling terminations here for SIGINT and SIGTERM
+    signal.signal(signal.SIGINT, terminateProcess)
+    signal.signal(signal.SIGTERM, terminateProcess)
+
+
+xanderShit.get_connection_info()
 bot.run(TOKEN)
