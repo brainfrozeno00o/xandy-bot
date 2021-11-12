@@ -156,6 +156,9 @@ class QuoteGetter:
         self.logger.info("Successfully got a random Xander quote...")
         return quote
 
+    def get_all_quotes(self):
+        return self.ORIGINAL_DATA
+
     def get_up_for_release_quotes_length(self):
         return len(self.UP_FOR_RELEASE)
 
