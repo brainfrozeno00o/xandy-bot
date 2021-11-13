@@ -438,6 +438,7 @@ if __name__ == "__main__":
     xanderShit = QuoteGetter()
     bot.all_quotes = xanderShit.get_all_quotes()
     bot.quote_image = IMAGE_2
+    bot.all_images = xanderShit.get_all_images()
 
     # handling terminations here for SIGINT and SIGTERM
     signal.signal(signal.SIGINT, terminateProcess)
