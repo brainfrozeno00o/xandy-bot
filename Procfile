@@ -1,1 +1,1 @@
-worker: REMAP_SIGTERM=SIGINT python bot.py
+worker: python bot.py
