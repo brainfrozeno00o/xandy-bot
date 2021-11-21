@@ -9,11 +9,11 @@ This Discord bot does all the shenanigans Rene Alexander S. Castillo does in rea
 - Bot now has its own help command by running `%helphelphelp {command|alias}` where the command or alias argument is optional.
 - Bot will also give a random answer to a specific statement by running `%lgtm {statement}`
 - Bot does a callout `HOY @Blitz` every time SJG says something in any channel in a server where **both** the bot and SJG are present. It has a cooldown of an hour before the bot can call him out again.
+- Bot can give a random quote upon the request of a user. This **should not** affect the scheduled sending of random quotes.
+- Bot can give a random image of the real Xander Castillo.
 
 ## Future Features
 
-- Bot can give a random quote upon the request of a user. This **should not** affect the scheduled sending of random quotes.
-- Bot can give a random image of the real Xander Castillo.
 - Bot can play K-pop songs catered to the real Xander Castillo's liking.
 
 ## Prerequisites
