@@ -440,9 +440,10 @@ if __name__ == "__main__":
     bot.quote_image = IMAGE_2
     bot.all_images = xanderShit.get_all_images()
 
-    # handling terminations here for SIGINT and SIGTERM
+    # handling terminations here for SIGINT, SIGTERM and SIGQUIT (Ubuntu)
     signal.signal(signal.SIGINT, terminateProcess)
     signal.signal(signal.SIGTERM, terminateProcess)
+    signal.signal(signal.SIGQUIT, terminateProcess) # mainly for Ubuntu, used by the VPS
 
 
 xanderShit.get_connection_info()
