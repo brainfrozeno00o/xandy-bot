@@ -22,6 +22,9 @@ class QuoteGetter:
     ORIGINAL_DATA = []
     ORIGINAL_DATA_LENGTH = 0
 
+    # all images
+    ORIGINAL_IMAGES = []
+
     UP_FOR_RELEASE = []  # pool of quotes that have not been said by the bot
     released = 0  # refers to the number of quotes released in the current session
 
@@ -124,6 +127,10 @@ class QuoteGetter:
             self.UP_FOR_RELEASE = deepcopy(self.ORIGINAL_DATA)
         # source of truth - up for release
         self.released = self.ORIGINAL_DATA_LENGTH - len(self.UP_FOR_RELEASE)
+        # execute query for getting all the images - PROBABLY MUST HAVE A SEPARATE CLASS FOR THIS
+        self.cursor.execute("SELECT * from all_images")
+        self.ORIGINAL_IMAGES = self.cursor.fetchall()
+
 
     # pooling implementation here
     def get_quote(self):
@@ -155,6 +162,12 @@ class QuoteGetter:
 
         self.logger.info("Successfully got a random Xander quote...")
         return quote
+
+    def get_all_images(self):
+        return self.ORIGINAL_IMAGES
+
+    def get_all_quotes(self):
+        return self.ORIGINAL_DATA
 
     def get_up_for_release_quotes_length(self):
         return len(self.UP_FOR_RELEASE)

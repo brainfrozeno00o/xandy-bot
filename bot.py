@@ -22,11 +22,12 @@ import signal
 
 load_dotenv()
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 # ALL STRINGS, CONVERT TO INT WHEN NEEDED
 TOKEN = getenv("DISCORD_TOKEN")
 IMAGE = getenv("XANDER_IMAGE")
+IMAGE_2 = getenv("XANDER_IMAGE_2")
 ENVIRONMENT = getenv("ENVIRONMENT")
 LOGS_CHANNEL_ID = getenv("XANDY_LOG_CHANNEL_ID")
 LOG_MESSAGE_ID = getenv("MESSAGE_ID")
@@ -435,6 +436,9 @@ if __name__ == "__main__":
         bot.load_extension(extension)
 
     xanderShit = QuoteGetter()
+    bot.all_quotes = xanderShit.get_all_quotes()
+    bot.quote_image = IMAGE_2
+    bot.all_images = xanderShit.get_all_images()
 
     # handling terminations here for SIGINT and SIGTERM
     signal.signal(signal.SIGINT, terminateProcess)
