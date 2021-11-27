@@ -2,6 +2,18 @@
 
 This Discord bot does all the shenanigans Rene Alexander S. Castillo does in real life. The funding[^1] for this bot is also sponsored by him... I wish I have generational wealth like he has, it's really hard to be poor and ugly.
 
+## Future of XandyBot
+
+With the support/development of the `discord.py` library not continuing anymore (see this [gist](https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1) done by the creator and maintainer of the library), we will also be ceasing development of the XandyBot... in using the `discord.py` library.
+
+With Discord expecting that all bots to implement slash commands by April 2022, we will be continuing the development of XandyBot using Node.js. In particular, we will be using the `discord.js` library.
+
+We have more features to introduce with ths bot and we are looking forward to release them while we are now migrating to a different programming language and a different library. 
+
+This will ideally take some time as we still have to learn the `discord.js` library in order to proceed, but we will make sure that we will implement the use of slash commands by April 2022.
+
+For now, you can probably have a look at the source code for v1.2.0 (and fork it if you want and make some improvements).
+
 ## Current Features
 
 - Bot sending a random quote every day at 8:00 AM UTC+8 to the `#general` channel of your server.
